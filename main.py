@@ -5,7 +5,7 @@ import logging
 import os
 
 
-TOKEN = 'MTUxNDAzMzA4MjI0MjY5OTQwNA.GNzj5A.TxCJaVI1M2O7hlm87qKtJkR5LAQQJ9bY7n9R5c'  # GitHub secret
+TOKEN = os.getenv('PARKRANGER5000_TOKEN')  # GitHub secret
 ERROR_MSG = 'Please include a month, day, and name for your channel, such as **dec-31-nye-dance-party**'
 EVENTS_CATEGORY = 'Events'
 CHANNEL_NAME = 'event-planner'

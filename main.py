@@ -30,9 +30,9 @@ async def hello(ctx, *args):
     Some helpful data to check if the bot is working properly and debug messages.
     """
     await ctx.send('Hello!')
-    
+
     user_name = f'{ctx.author.name}/{ctx.author.display_name}'
-    print(f'Command executed by {user_name}')
+    print(f'"hello" command executed by {user_name}')
 
     print(f'bot.user.id: {bot.user.id}')
     print(f'bot.user.display_name: {bot.user.display_name}')

@@ -3,9 +3,9 @@ from discord.ext import commands
 
 import os
 
-# TODO Add better, cleaner logging
+# TODO Add better, cleaner logging. Currently the print statements end up in the Railway logs.
 
-TOKEN = os.getenv('PARKRANGER5000_TOKEN')
+TOKEN = os.getenv('PARKRANGER5000_TOKEN')  # Stored in Railway's env secrets
 ERROR_MSG = 'Please include a month, day, and description when you create your channel, like this: **!create dec 31 nye dance party**'
 EVENTS_CATEGORY_NAME = 'Events'
 EVENTS_CHANNEL_NAME = 'event-planner'
@@ -104,6 +104,11 @@ async def create(ctx, *args):
 
 @bot.event
 async def on_message(message):
+    """
+    Reads all messages to check whether the ParkRanger role has been mentioned,
+    or the ParkRanger5000 name. Not sure why anyone would do this, but it should
+    help prevent DMs and assist anyone who is not familiar with the bot.
+    """
     if message.author.id == bot.user.id:
         return
 

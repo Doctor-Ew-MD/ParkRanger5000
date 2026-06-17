@@ -17,6 +17,6 @@ Restrictions
 
 Tech Stuff
 ----------
-Security is always a major concern in web development, and this bot has been written to prevent sensitive information about our server, and by extension the people in it. Deployment and secrets are handled and stored by Railway, and no sensitive information is in the bot's code or on GitHub. The code utilizes the Discord API and Python library. If you would to contribute to it, or see how it was made, reach out to Drew!
+This bot a bundle of code that is being hosted and running on a cloud service. It has the potential to go down or have service disrupted at any time, for reasons that are beyond our control. If it isn't working, ping an admin to help out, assuming they haven't started investigating the issue already.
 
-Lastly, this bot a bundle of code that is being hosted and running on a cloud service. It has the potential to go down or have service disrupted at any time, for reasons that are beyond our control. If it isn't working, ping an admin to help out, assuming they haven't started investigating the issue already.
+Security is always a major concern in web development, and this bot has been written to prevent sensitive information about our server-- and by extension the people in it-- from being exposed or made easily available. Deployment and secrets are handled and stored by Railway, and no sensitive information is in the bot's code or on GitHub. The code utilizes the Discord API and Python library. If you would to contribute to it, or see how it was made, reach out to Drew!

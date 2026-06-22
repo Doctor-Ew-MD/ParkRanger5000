@@ -6,7 +6,7 @@ import os
 # TODO Add better, cleaner logging. Currently the print statements end up in the Railway logs.
 
 TOKEN = os.getenv('PARKRANGER5000_TOKEN')  # Stored in Railway's env secrets
-ERROR_MSG = 'Please include a month, day, and description when you create your channel, like this: **!create dec 31 nye dance party**'
+ERROR_MSG = 'Please include a month, day (or range of dates like 23-25), and description when you create your channel, like this: **!create dec 31 nye dance party**'
 EVENTS_CATEGORY_NAME = 'Events'
 EVENTS_CHANNEL_NAME = 'event-planner'
 BOT_ROLE_NAMES = {'ParkRanger5000', 'ParkRanger'}
@@ -71,11 +71,33 @@ async def create(ctx, *args):
         await ctx.send(ERROR_MSG)
         return
 
-    try:
-        int(args[1])
-    except ValueError:
-        print(f'Failed int check from {user_name}')
-        await ctx.send('That channel name didn\'t meet the format requirements of month-day-title.')
+    # Handle a single day in the channel name
+    dates = args[1].split('-')
+    
+    if len(dates) == 1:
+        try:
+            int(args[1])
+        except ValueError:
+            print(f'Failed single date int check from {user_name}')
+            await ctx.send('That channel name didn\'t quite meet the format requirements of month-day-title.')
+            await ctx.send(ERROR_MSG)
+            return
+    
+    # Handle a range of dates in the channel name
+    elif len(dates) == 2:
+        try: 
+            int(dates[0])
+            int(dates[1])
+        except Exception:
+            print(f'Failed date range int check from {user_name}')
+            await ctx.send('It looks like you tried to use a range of dates, but your message might be malformed.')
+            await ctx.send('Try something like this: **!create may 23-25 memorial day long weekend**')
+            return
+    
+    # Send useful error for too many date ranges (not sure when this would happen)
+    elif len(dates) > 2:
+        print(f'Too many hyphens used for the date range from {user_name}')
+        await ctx.send('That\'s too many hyphens!')
         await ctx.send(ERROR_MSG)
         return
 

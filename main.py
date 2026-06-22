@@ -123,7 +123,7 @@ async def on_message(message):
         ctx = await bot.get_context(message)
         events_channel = discord.utils.get(ctx.guild.channels, name=EVENTS_CHANNEL_NAME)
         await message.channel.send(f'Hi, I\'m a bot made to help you create channels in {events_channel.jump_url}.')
-        await message.channel.send(f'Head over there to create a channel, or DM an admin if you need help.')
+        await message.channel.send(f'You can go there now to create a channel, or DM an admin if you need help.')
         await message.channel.send(ERROR_MSG)
 
     await bot.process_commands(message)

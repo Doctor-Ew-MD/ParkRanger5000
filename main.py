@@ -6,7 +6,7 @@ import os
 # TODO Add better, cleaner logging. Currently the print statements end up in the Railway logs.
 
 TOKEN = os.getenv('PARKRANGER5000_TOKEN')  # Stored in Railway's env secrets
-ERROR_MSG = 'Please include a month, day (or range of dates like 23-25), and description when you create your channel, like this: **!create dec 31 nye dance party**'
+ERROR_MSG = 'Please include a month, day (or range of dates like 23-25), and description, like this:\n**!create dec 31 nye dance party**'
 EVENTS_CATEGORY_NAME = 'Events'
 EVENTS_CHANNEL_NAME = 'event-planner'
 BOT_ROLE_NAMES = {'ParkRanger5000', 'ParkRanger'}
@@ -48,6 +48,7 @@ async def hello(ctx, *args):
 async def create(ctx, *args):
     """
     Allow users to create a new channel, but prevent spamming and report errors.
+    Fun fact: it looks like Discord auto-strips prefixed '#' from channel names
     """
 
     if not ctx:  # This will probably never be True
@@ -65,12 +66,18 @@ async def create(ctx, *args):
         await ctx.send(f'That command only works in the **{EVENTS_CHANNEL_NAME}** channel!')
         return
 
-    if not args or len(args) < 3:
-        print(f'Failed args or len(args) check from {user_name}')
-        await ctx.send(f'That channel name isn\'t quite detailed enough!')
+    if not args:
+        print(f'Failed args test-- no args found-- from {user_name}')
+        await ctx.send(f'It looks like you forgot to submit a channel name.')
         await ctx.send(ERROR_MSG)
         return
 
+    if len(args) < 3:
+        print(f'Failed args or len(args) check from {user_name}')
+        await ctx.send(f'I think that channel name is missing some info or some spaces!')
+        await ctx.send(ERROR_MSG)
+        return
+    
     # Handle a single day in the channel name
     dates = args[1].split('-')
     
@@ -100,7 +107,7 @@ async def create(ctx, *args):
         await ctx.send('That\'s too many hyphens!')
         await ctx.send(ERROR_MSG)
         return
-
+            
     channel_name = '-'.join(args)
 
     if existing := discord.utils.get(ctx.guild.channels, name=channel_name):        
@@ -146,7 +153,7 @@ async def on_message(message):
         events_channel = discord.utils.get(ctx.guild.channels, name=EVENTS_CHANNEL_NAME)
         await message.channel.send(f'Hi, I\'m a bot made to help you create channels in {events_channel.jump_url}.')
         await message.channel.send(f'You can go there now to create a channel, or DM an admin if you need help.')
-        await message.channel.send(ERROR_MSG)
+        await message.channel.send(f'When you create a channel, p{ERROR_MSG[1:]}')
 
     await bot.process_commands(message)
 

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from channels import ChannelHandler
+from commands import hello
+from intents import IntentsHandler
 from messages import MessageHandler
 from reactions import ReactionHandler
 
-import discord
 from discord.ext import commands
 
 
@@ -15,18 +16,8 @@ TOKEN = 'MTUxODczNjgwOTMzOTY1NDE1NA.Gze9Xg.6g6O1S578ap94MYYy9bI-E1Jih23DYUpgKtbo
 BOT_ROLE_NAMES = {'ParkRanger5000', 'ParkRanger'}
 INTRODUCTION_CHANNEL_NAME = "introduction"
 
-intents = discord.Intents.default()
-intents.members = True
-intents.messages = True
-intents.message_content = True
-intents.reactions = True
-
+intents = IntentsHandler().set()
 bot = commands.Bot(command_prefix='!', intents=intents)
-
-
-@bot.event
-async def on_ready():
-    print(f'We have logged in as {bot.user}')
 
 
 @bot.command()
@@ -34,17 +25,7 @@ async def hello(ctx, *args):
     """
     Some helpful debug data to check if the bot is working properly.
     """
-    await ctx.send('Hello!')
-
-    user_name = f'{ctx.author.name}/{ctx.author.display_name}'
-    print(f'"hello" command executed by {user_name}')
-    print(f'bot.user.id: {bot.user.id}')
-    print(f'bot.user.display_name: {bot.user.display_name}')
-    print(f'bot.user.name: {bot.user.name}')
-    print(f'bot.user.global_name: {bot.user.global_name}')
-    print(f'user mentions: {ctx.message.mentions}')
-    print(f'role mentions: {ctx.message.role_mentions}')
-    print(f'channel mentions: {ctx.message.channel_mentions}')
+    await hello(ctx, bot, args)
 
 
 @bot.command()
@@ -56,6 +37,11 @@ async def create(ctx, *args):
     channel = ChannelHandler(ctx, args)
     if await channel.validate():
         await channel.create()
+
+
+@bot.event
+async def on_ready():
+    print(f'We have logged in as {bot.user}')
 
 
 @bot.event
@@ -83,6 +69,5 @@ async def on_raw_reaction_add(payload):
     channel = bot.get_channel(payload.channel_id)
     if channel.name.lower() == INTRODUCTION_CHANNEL_NAME:   
         await ReactionHandler(bot, channel, payload).verification_check()
-
 
 bot.run(TOKEN)

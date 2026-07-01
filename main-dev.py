@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from channels import ChannelHandler
-from commands import hello
+from commands import CommandHandler
 from intents import IntentsHandler
 from messages import MessageHandler
 from reactions import ReactionHandler
@@ -25,7 +25,7 @@ async def hello(ctx, *args):
     """
     Some helpful debug data to check if the bot is working properly.
     """
-    await hello(ctx, bot, args)
+    await CommandHandler.hello(ctx, bot, args)
 
 
 @bot.command()

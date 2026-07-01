@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from channels import ChannelHandler
 from commands import CommandHandler
 from intents import IntentsHandler
@@ -9,9 +11,9 @@ from reactions import ReactionHandler
 from discord.ext import commands
 
 
-# TODO Add better, cleaner logging. Currently the print statements end up in the Railway logs.
+# TODO Add better, cleaner logging
 
-TOKEN = 'MTUxODczNjgwOTMzOTY1NDE1NA.Gze9Xg.6g6O1S578ap94MYYy9bI-E1Jih23DYUpgKtbos'
+TOKEN = os.getenv('DISCORD_TOKEN')
 
 BOT_ROLE_NAMES = {'ParkRanger5000', 'ParkRanger'}
 INTRODUCTION_CHANNEL_NAME = "introduction"

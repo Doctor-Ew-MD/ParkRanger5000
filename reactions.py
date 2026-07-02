@@ -7,7 +7,7 @@ VERIFICATION_REACTION_COUNT = 1
 
 
 class ReactionHandler:
-    def __int__(self, bot, channel, payload):
+    def __init__(self, bot, channel, payload):
         self.bot = bot
         self.channel = channel
         self.payload = payload

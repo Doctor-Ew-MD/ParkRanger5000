@@ -70,7 +70,6 @@ async def on_raw_reaction_add(payload):
     """
     channel = bot.get_channel(payload.channel_id)
     if channel.name.lower() == INTRODUCTION_CHANNEL_NAME:
-        print("we're in teh right channel")
         await ReactionHandler(bot, channel, payload).verification_check()
 
 bot.run(TOKEN)

@@ -1,16 +1,20 @@
 from discord import utils
 
-
 UNVERIFIED_ROLE = "unverified"
 VERIFIED_ROLE = "verified"
-VERIFICATION_REACTION_COUNT = 1
+VERIFICATION_REACTION_COUNT = 5
 
 
-class ReactionHandler:
-    def __init__(self, bot, channel, payload):
+class BaseReaction:
+    def __init__(self, bot, payload):
         self.bot = bot
-        self.channel = channel
         self.payload = payload
+
+
+class VerificationReaction(BaseReaction):
+    def __init__(self, channel):
+        super().__init__()
+        self.channel = channel
 
     async def verification_check(self):
         """
@@ -40,4 +44,3 @@ class ReactionHandler:
                     await message_author.add_roles(verified_role)
                     await message_author.send(
                         f"Welcome to {guild}, {message_author.mention}! You are now verified!")  # Send DM
-                    

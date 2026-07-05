@@ -19,7 +19,8 @@ class MessageHandler:
         print("Bot was mentioned!")
         ctx = await self.bot.get_context(self.message)
         events_channel = utils.get(ctx.guild.channels, name=EVENTS_CHANNEL_NAME)
-        await self.message.channel.send(f"Hi, I'm a bot made to help you create channels in {events_channel.jump_url}.")
-        await self.message.channel.send(f"You can go there now to create a channel, or DM an admin if you need help.")
-        await self.message.channel.send(f"When you create a channel, p{ERROR_MSG[1:]}")
-        
+        await self.message.channel.send(
+            f"Hi, I'm a bot made to help you create channels in {events_channel.jump_url}.\n"
+            f"You can go there now to create a channel, or DM an admin if you need help.\n"
+            f"When you create a channel, p{ERROR_MSG[1:]}"
+        )

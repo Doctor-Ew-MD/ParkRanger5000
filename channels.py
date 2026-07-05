@@ -1,15 +1,18 @@
 from __future__ import annotations
 
+import datetime
+
 import discord
+from discord import utils
 
 import calendar
 from collections import OrderedDict
 
 
-ERROR_MSG = ("Please include a month, day (or range of dates like 23-25), and description, like this:"
-             "\n**!create dec 31 nye dance party**")
-EVENTS_CATEGORY_NAME = "Events"
-ALLOWED_CHANNELS = ["event-planner"]  # Channels where users can use the !create command
+CHANNEL_ERROR_MSG = (
+    "Please include a month, day (or range of dates like 23-25), and description, like this:"
+    "\n**!create dec 31 nye dance party**"
+)
 IGNORE_POSITION = ["event-planner"]
 MONTHS_ABBR = list(map(lambda x: x.lower(), list(calendar.month_abbr)))
 
@@ -18,141 +21,176 @@ class ChannelError(Exception):
     pass
 
 
-class ChannelHandler:
+class BaseChannel:
+    def __init__(self, ctx):
+        self.ctx = ctx
+
+    async def validate_category(self, category_name: str):
+        """
+        Verify that the channel's category name is valid.
+        """
+        category = discord.utils.get(self.ctx.guild.categories, name=category_name)
+        if not category:
+            raise ChannelError(f"Category '{category_name}' doesn't exist!")
+
+    async def get_category(self, category_name: str) -> discord.CategoryChannel:
+        """
+        Returns the first category found with the given name.
+        """
+        category = discord.utils.get(self.ctx.guild.categories, name=category_name)
+
+        if not category:
+            raise ChannelError(f"Category '{category_name}' doesn't exist!")
+
+        return category
+
+    @staticmethod
+    async def overwrite_channel_positions(category: discord.CategoryChannel) -> bool:
+        """
+        Reset the channel positions in a category so that they increment by their
+        order as they appear. Discord does not update a channel's position when
+        that channel is moved via the UI. The position values of a group of
+        channels is not reflective of their order in the UI.
+        """
+        payload = [
+            {"id": channel.id, "position": i}
+            for i, channel in enumerate(category.channels)
+        ]
+        try:
+            await category.guild._state.http.bulk_channel_update(category.guild.id, payload)
+        except Exception as exc:
+            print(f"hit exception in overwrite_channel_positions: {exc}")
+            return False
+        else:
+            return True
+
+
+class NewChannel(BaseChannel):
+    def __init__(self, ctx):
+        super().__init__(ctx)
+
+    async def validate_unique(self, channel_name):
+        """
+        Verify that a channel called <channel_name> doesn't exist.
+        """
+        if utils.get(self.ctx.guild.channels, name=channel_name):
+            raise ChannelError(f"Channel {channel_name} already exists!")
+
+    def create_channel(self):
+        pass  # Not implemented
+
+
+class ExistingChannel(BaseChannel):
+    def __init__(self, ctx):
+        super().__init__(ctx)
+
+    async def validate_exists(self, channel_name: str):
+        """
+        Verify a channel called <channel_name> does exist.
+        """
+        if not utils.get(self.ctx.guild.channels, name=channel_name):
+            raise ChannelError(f"Channel {channel_name} doesn't exist.")
+
+
+class EventChannel(NewChannel):
     """
-    Controls channel creation and data validation.
+    Handles the creation and verification of a new event channel.
+    Follows a somewhat strict pattern which requires the name to start with
+    a month and date(s).
+    e.g., jan-31-new-years-party
     """
     def __init__(self, ctx, args):
-        self.ctx = ctx
+        super().__init__(ctx)
         self.args = args
-        self.channel_name = "-".join(self.args)
-        self.user_name = f"{self.ctx.author.name}/{self.ctx.author.display_name}"
 
-    async def create(self):
+    def validate_month(self):
         """
-        Create a new channel.
+        Approve a full or partial month name.
         """
-        category = discord.utils.get(self.ctx.guild.categories, name=EVENTS_CATEGORY_NAME)
-        await self.overwrite_channel_positions(category)
-        position = self.calculate_channel_position(category)
+        month = self.args[0]
+        if month[:3].lower() not in MONTHS_ABBR:
+            raise ChannelError(f"Sorry, I didn't recognize the month '{month}'.")
 
-        print(f"Attempting to create channel **{self.channel_name}** from {self.user_name}")
+    def validate_dates(self):
+        """
+        This isn't properly checking a date against a month, rather it's looking
+        for an integer or "range" (e.g., 10-12).
+        """
+        dates = self.args[1]
+        if "-" in dates:
+            split_dates = dates.split("-")
+            try:
+                int(split_dates[0])
+                int(split_dates[1])
+            except ValueError:
+                raise ChannelError(f"I didn't understand the date range '{dates}'.")
+        else:
+            try:
+                int(dates)
+            except ValueError:
+                raise ChannelError(f"I didn't understand the date '{dates}'.")
+
+    @staticmethod
+    def validate_name(channel_name: str, name_length: int = 40):
+        if len(channel_name) > name_length:
+            raise ChannelError(f"That channel's name is too long! (The maximum length is {name_length} characters).")
+
+    async def create_channel(self, category_name: str, channel_name: str, sort: bool = False):
+        """
+        Creates a new channel called <channel_name>.
+
+        The 'sort' param will add some overhead as it reassigns the position
+        attribute of all the channels in the given category, but will attempt
+        to create the channel in the properly sorted position relative to other channels.
+        If you want to speed things up, set sort to False and move channels via the UI.
+        """
+        category = await self.get_category(category_name)
+
+        if sort and await self.overwrite_channel_positions(category):
+            position = self.calculate_channel_position(category, channel_name)
+        else:
+            position = 50  # represents the bottom of a category
+
         channel = await self.ctx.guild.create_text_channel(
-            self.channel_name,
+            channel_name,
             overwrites={},
             category=category,
-            reason=f"created by {self.user_name}",
+            reason=f"created by {self.ctx.author.name}/{self.ctx.author.display_name}",
             position=position,
         )
-        print(f"New channel **{self.channel_name}** created by {self.user_name}")
         await self.ctx.send(f"Here ya go! {channel.jump_url}")
 
-    async def validate(self) -> bool:
+    def calculate_channel_position(self, category: discord.CategoryChannel, new_channel_name: str) -> int:
         """
-        Run through validation for channel creation and attempt to create a new channel.
-        """
-        if not self.ctx:  # This will probably never be True
-            print("No context provided")
-            return False
+        Determine where to insert the new channel within the existing channels
+        to sort the entire category by month and date. When a range is used in
+        the channel name, the channel will appear after any matching single dates.
 
-        if not self.args:
-            print(f"Failed args test-- no args found-- from {self.user_name}")
-            await self.ctx.send(f"It looks like you forgot to submit a channel name.")
-            await self.ctx.send(ERROR_MSG)
-            return False
-
-        if self.ctx.message.channel.name.lower() in ALLOWED_CHANNELS:
-            try:
-                await self.validate_args()
-                await self.validate_dates()
-                await self.validate_unique()
-                await self.validate_name()
-            except ChannelError:
-                return False
-            else:
-                return True
-        else:
-            print(f"Failed event-planner check from {self.user_name}")
-            await self.ctx.send(f"That command only works in the following channel(s):")
-            await self.ctx.send(f"{','.join(ALLOWED_CHANNELS)}")
-            return False
-
-    async def validate_args(self):
-        """
-        Verify that the minimum number of args has been found.
-        """
-        if len(self.args) < 3:
-            print(f"Failed args or len(args) check from {self.user_name}")
-            print(f"args: {self.args}")
-            await self.ctx.send(f"I think that channel name is missing some info or some spaces!")
-            await self.ctx.send(ERROR_MSG)
-            raise ChannelError()
-
-    async def validate_dates(self):
-        """
-        Handle all date-related verification for the proposed channel name.
-        """
-        dates = self.args[1].split("-")
-
-        if len(dates) == 1:
-            try:
-                int(self.args[1])
-            except ValueError:
-                print(f"Failed single date int check from {self.user_name}")
-                await self.ctx.send("That channel name didn't quite meet the format requirements of month-day-title.")
-                await self.ctx.send(ERROR_MSG)
-                return
-
-        # Handle a range of dates in the channel name
-        elif len(dates) == 2:
-            try:
-                int(dates[0])
-                int(dates[1])
-            except Exception:
-                print(f"Failed date range int check from {self.user_name}")
-                await self.ctx.send(
-                    "It looks like you tried to use a range of dates, but your message might be malformed.")
-                await self.ctx.send("Try something like this: **!create may 23-25 memorial day long weekend**")
-                return
-
-        # Send useful error for too many date ranges (not sure when this would happen)
-        elif len(dates) > 2:
-            print(f"Too many hyphens used for the date range from {self.user_name}")
-            await self.ctx.send("That's too many hyphens!")
-            await self.ctx.send(ERROR_MSG)
-            return
-
-    async def validate_unique(self):
-        if existing := discord.utils.get(self.ctx.guild.channels, name=self.channel_name):
-            print(f"Failed existing check from {self.user_name}")
-            await self.ctx.send(f"A channel named **{self.channel_name}** already exists!")
-            raise ChannelError()
-
-    async def validate_name(self):
-        if len(self.channel_name) > 40:
-            print(f"Channel\"s name exceeded the maximum length from {self.user_name}")
-            await self.ctx.send(f"That channel name is a little too long, could you please shorten it and try again?")
-            await self.ctx.send(ERROR_MSG)
-            raise ChannelError()
-
-    def calculate_channel_position(self, category: discord.CategoryChannel) -> int:
-        """
-        Determine where to insert the new channel within the existing channels so
-        that the entire category is sorted.
+        If the month is earlier than the current month, the event is happening
+        during the next year, so it needs to appear after any events happening
+        in the current year.
         """
         def month_day_key(name: str):
             if name in IGNORE_POSITION:
-                return 0, 0  # Always sort first
+                return 0, 0, 0, 0  # Always sort first
             parts = name.split("-")
             month, day = int(parts[0]), int(parts[1])
-            return month, day
+
+            current_month = datetime.datetime.now().month
+            year_offset = 1 if month < current_month else 0
+
+            try:
+                is_range_date = int(parts[2])  # ranges sort after single dates
+            except (ValueError, IndexError):
+                is_range_date = 0
+
+            return year_offset, month, day, is_range_date
 
         channels = {}
 
         for channel in category.channels:
             if channel.name in IGNORE_POSITION:
-                channels[channel.name] = channel.position
-                continue  # Don't attempt to convert this channel's name to a month-alias, there is no month!
+                continue
 
             try:
                 if alias_name := self.generate_position_name(channel.name):
@@ -165,7 +203,7 @@ class ChannelHandler:
             channel_names = list(ordered_channels.keys())
 
             try:
-                new_channel_alias = self.generate_position_name(self.channel_name)
+                new_channel_alias = self.generate_position_name(new_channel_name)
             except ChannelError:
                 return 100
 
@@ -176,20 +214,6 @@ class ChannelHandler:
                 return 0  # Force the new channel directly below the "event-planner" channel
             return insert_index
         return 100
-
-    @staticmethod
-    async def overwrite_channel_positions(category: discord.CategoryChannel):
-        """
-        Reset the channel positions in a category so that they increment by their
-        order as they appear. Discord does not update a channel's position when
-        that channel is moved via the UI. The position values of a group of
-        channels is not reflective of their order in the UI.
-        """
-        payload = [
-            {"id": channel.id, "position": i}
-            for i, channel in enumerate(category.channels)
-        ]
-        await category.guild._state.http.bulk_channel_update(category.guild.id, payload)
 
     @staticmethod
     def generate_position_name(channel_name: str) -> str:

@@ -2,7 +2,7 @@ from discord import utils
 
 UNVERIFIED_ROLE = "unverified"
 VERIFIED_ROLE = "verified"
-VERIFICATION_REACTION_COUNT = 5
+VERIFICATION_REACTION_COUNT = 1
 
 
 class BaseReaction:
@@ -12,8 +12,8 @@ class BaseReaction:
 
 
 class VerificationReaction(BaseReaction):
-    def __init__(self, channel):
-        super().__init__()
+    def __init__(self, bot, payload, channel):
+        super().__init__(bot, payload)
         self.channel = channel
 
     async def verification_check(self):

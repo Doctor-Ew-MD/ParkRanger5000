@@ -1,161 +1,154 @@
-import discord
+from __future__ import annotations
+
+import traceback
+
+from discord import utils
 from discord.ext import commands
 
-import os
+from ParkRanger5000.categories import EventCategory, CategoryError
+from ParkRanger5000.utils import CHANNEL_ERROR_MSG, STATIC_TOKEN, BOT_ROLE_NAMES
+from channels import ExistingChannel, EventChannel, ChannelFormatError
+from commands import SimpleCommand, CommandWithArgs
+from intents import IntentsHandler
+from messages import MessageHandler
 
-# TODO Add better, cleaner logging. Currently the print statements end up in the Railway logs.
-
-TOKEN = os.getenv('PARKRANGER5000_TOKEN')  # Stored in Railway's env secrets
-ERROR_MSG = 'Please include a month, day (or range of dates like 23-25), and description, like this:\n**!create dec 31 nye dance party**'
-EVENTS_CATEGORY_NAME = 'Events'
-EVENTS_CHANNEL_NAME = 'event-planner'
-BOT_ROLE_NAMES = {'ParkRanger5000', 'ParkRanger'}
-
-intents = discord.Intents.default()
-intents.members = True
-intents.messages = True
-intents.message_content = True
-
-bot = commands.Bot(command_prefix='!', intents=intents)
-
-
-@bot.event
-async def on_ready():
-    print(f'We have logged in as {bot.user}')
+if STATIC_TOKEN:
+    intents = IntentsHandler().set_intents()
+    bot = commands.Bot(command_prefix="!", intents=intents)
+else:
+    raise Exception("You must set the STATIC_TOKEN environment variable to run the bot.")
 
 
 @bot.command()
-async def hello(ctx, *args):
+async def hello(ctx):
     """
-    Some helpful data to check if the bot is working properly and debug messages.
+    Some helpful debug data to check if the bot is working properly.
     """
-    await ctx.send('Hello!')
-
-    user_name = f'{ctx.author.name}/{ctx.author.display_name}'
-    print(f'"hello" command executed by {user_name}')
-
-    print(f'bot.user.id: {bot.user.id}')
-    print(f'bot.user.display_name: {bot.user.display_name}')
-    print(f'bot.user.name: {bot.user.name}')
-    print(f'bot.user.global_name: {bot.user.global_name}')
-
-    print(f'user mentions: {ctx.message.mentions}')
-    print(f'role mentions: {ctx.message.role_mentions}')
-    print(f'channel mentions: {ctx.message.channel_mentions}')
+    await SimpleCommand.hello(ctx, bot)
 
 
 @bot.command()
 async def create(ctx, *args):
     """
-    Allow users to create a new channel, but prevent spamming and report errors.
-    Fun fact: it looks like Discord auto-strips prefixed '#' from channel names
+    Allow members to create a new channel and receive useful errors.
+    Expected syntax: '!create dec 31 nye party' or '!create dec-31-nye-party'
     """
+    allowed_roles = ["Verified"]
+    allowed_channels = ["event-planner"]
+    category_name = "Events"
 
-    if not ctx:  # This will probably never be True
-        print('No context provided')
-        return
+    cmd = CommandWithArgs(ctx, allowed_roles, allowed_channels)
+    await cmd.validate_permissions()
 
-    if bot.user.name in args:
-        print('bot mentioned')
-        return
-    
-    user_name = f'{ctx.author.name}/{ctx.author.display_name}'
+    if len(ctx.args) > 2:  # input uses spaces, sanitize to use hyphens
+        ctx.args = [ctx.args[0], ("-".join(ctx.args[1:]))]
+    cmd.validate_args_len(1)
 
-    if ctx.message.channel.name.lower() != EVENTS_CHANNEL_NAME:
-        print(f'Failed event-planner check from {user_name}')
-        await ctx.send(f'That command only works in the **{EVENTS_CHANNEL_NAME}** channel!')
-        return
+    channel_name = ctx.args[1].lower()
+    event_channel = EventChannel(ctx, name=channel_name)
+    await event_channel.validate_name()
 
-    if not args:
-        print(f'Failed args test-- no args found-- from {user_name}')
-        await ctx.send(f'It looks like you forgot to submit a channel name.')
-        await ctx.send(ERROR_MSG)
-        return
+    event_category = EventCategory(ctx, category_name)
+    category_obj = await event_category.get_category()
 
-    if len(args) < 3:
-        print(f'Failed args or len(args) check from {user_name}')
-        await ctx.send(f'I think that channel name is missing some info or some spaces!')
-        await ctx.send(ERROR_MSG)
-        return
-    
-    # Handle a single day in the channel name
-    dates = args[1].split('-')
-    
-    if len(dates) == 1:
-        try:
-            int(args[1])
-        except ValueError:
-            print(f'Failed single date int check from {user_name}')
-            await ctx.send('That channel name didn\'t quite meet the format requirements of month-day-title.')
-            await ctx.send(ERROR_MSG)
-            return
-    
-    # Handle a range of dates in the channel name
-    elif len(dates) == 2:
-        try: 
-            int(dates[0])
-            int(dates[1])
-        except Exception:
-            print(f'Failed date range int check from {user_name}')
-            await ctx.send('It looks like you tried to use a range of dates, but your message might be malformed.')
-            await ctx.send('Try something like this: **!create may 23-25 memorial day long weekend**')
-            return
-    
-    # Send useful error for too many date ranges (not sure when this would happen)
-    elif len(dates) > 2:
-        print(f'Too many hyphens used for the date range from {user_name}')
-        await ctx.send('That\'s too many hyphens!')
-        await ctx.send(ERROR_MSG)
-        return
-            
-    channel_name = '-'.join(args)
+    await event_channel.create_channel(category_obj)
+    channel_obj = await event_channel.get_channel()
 
-    if existing := discord.utils.get(ctx.guild.channels, name=channel_name):        
-        print(f'Failed existing check from {user_name}')
-        await ctx.send(f'A channel named **{channel_name}** already exists!')
-        return
+    await ctx.send(f"Your channel awaits, have fun! {channel_obj.jump_url}")
+    await event_category.sort()
 
-    if len(channel_name) > 40:
-        print(f'Channel\'s name exceeded the maximum length from {user_name}')
-        await ctx.send(f'That channel name is a little too long, could you please shorten it and try again?')
-        await ctx.send(ERROR_MSG)
-        return
 
-    category = discord.utils.get(ctx.guild.categories, name=EVENTS_CATEGORY_NAME)
+@bot.command()
+async def rename(ctx, *args):
+    """
+    Allows members to rename an existing channel.
+    """
+    allowed_roles = ["Verified"]
+    allowed_channels = ["event-planner"]
+    category_name = "Events"
+    arrow = "->"
 
-    print(f'Attempting to create channel **{channel_name}** from {user_name}')
-    channel = await ctx.guild.create_text_channel(
-        channel_name,
-        overwrites={},
-        category=category,
-        reason=f'created by {user_name}',
-    )
-    print(f'New channel **{channel_name}** created by {user_name}')
-    await ctx.send(f'Here ya go! {channel.jump_url}')
+    cmd = CommandWithArgs(ctx, allowed_roles, allowed_channels)
+    await cmd.validate_permissions()
+    cmd.validate_syntax(arrow)
+
+    arrow_index = ctx.args.index(arrow)
+    if len(ctx.args) > 4 and arrow_index != 2:  # input uses spaces, sanitize to use hyphens
+        arg_one = "-".join(ctx.args[1:arrow_index])
+        arg_two = "-".join(ctx.args[arrow_index + 1:])
+        ctx.args = [ctx.args[0], arg_one, arrow, arg_two]
+    cmd.validate_args_len(3)
+
+    existing_channel_name = ctx.args[1]
+    existing_channel = ExistingChannel(ctx, existing_channel_name.lower())
+    await existing_channel.validate_exists(category_name)
+
+    updated_channel_name = ctx.args[3]
+    updated_channel = EventChannel(ctx, updated_channel_name.lower())
+    await updated_channel.validate_name()
+
+    channel_obj = await existing_channel.get_channel()
+    await channel_obj.edit(name=updated_channel.name)
+    await ctx.send(f"As you wish! **{existing_channel_name}** has been renamed to **{channel_obj.jump_url}**!")
+
+    event_category = EventCategory(ctx, category_name)  # Safe to assume Events exists since channel validation passed
+    await event_category.sort()
+
+
+@bot.event
+async def on_ready():
+    print(f"We have logged in as {bot.user}")
 
 
 @bot.event
 async def on_message(message):
     """
-    Reads all messages to check whether the ParkRanger role has been mentioned,
-    or the ParkRanger5000 name. Not sure why anyone would do this, but it should
-    help prevent DMs and assist anyone who is not familiar with the bot.
+    Handle all message-related actions from/to the bot.
     """
     if message.author.id == bot.user.id:
-        return
+        return  # Stop the bot from talking to itself
 
     bot_mentioned = bot.user in message.mentions
     role_mentioned = any(role.name in BOT_ROLE_NAMES for role in message.role_mentions)
 
     if bot_mentioned or role_mentioned:
-        print('Bot was mentioned!')
-        ctx = await bot.get_context(message)
-        events_channel = discord.utils.get(ctx.guild.channels, name=EVENTS_CHANNEL_NAME)
-        await message.channel.send(f'Hi, I\'m a bot made to help you create channels in {events_channel.jump_url}.')
-        await message.channel.send(f'You can go there now to create a channel, or DM an admin if you need help.')
-        await message.channel.send(f'When you create a channel, p{ERROR_MSG[1:]}')
+        await MessageHandler(bot, message).at_mention()
 
     await bot.process_commands(message)
 
 
-bot.run(TOKEN)
+# @bot.event
+# async def on_raw_reaction_add(payload):
+#     """
+#     Handles all functionality triggered by reactions.
+#     """
+#     channel = bot.get_channel(payload.channel_id)
+#     if channel.name.lower() == INTRODUCTION_CHANNEL_NAME:
+#         reaction = VerificationReaction(bot, payload, channel)
+#         await reaction.verification_check()
+
+
+@bot.event
+async def on_command_error(ctx, error):
+    """
+    Unhandled exceptions in discord.py are caught internally by the library
+    and may not always produce a traceback in the logs. This error handler
+    explicitly prints them.
+
+    discord.py wraps errors in a CommandInvokeError before passing them to
+    on_command_error, so we need to unwrap it.
+    """
+    if isinstance(error, commands.CommandInvokeError):
+        error = error.original
+        traceback.print_exception(type(error), error, error.__traceback__)
+
+        if isinstance(error, ChannelFormatError):
+            await ctx.send(f"{error}\n\n{CHANNEL_ERROR_MSG}")
+        elif not isinstance(error, CategoryError):
+            await ctx.send(error)
+    else:
+        traceback.print_exception(type(error), error, error.__traceback__)
+        raise error
+
+
+bot.run(STATIC_TOKEN)

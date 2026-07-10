@@ -2,7 +2,7 @@ import datetime
 
 import discord
 
-from ParkRanger5000.utils import MONTHS_ABBR
+from utils import MONTHS_ABBR
 
 
 class CategoryError(Exception):

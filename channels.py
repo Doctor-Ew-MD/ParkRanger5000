@@ -5,7 +5,7 @@ import re
 import discord
 from discord import utils
 
-from ParkRanger5000.utils import CHANNEL_NAME_CHARS, MONTHS_ABBR, VALID_MONTHS
+from utils import CHANNEL_NAME_CHARS, MONTHS_ABBR, VALID_MONTHS
 
 
 class ChannelError(Exception):

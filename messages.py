@@ -1,6 +1,6 @@
 from discord import utils
 
-from ParkRanger5000.utils import EVENTS_CHANNEL_NAME
+from utils import EVENTS_CHANNEL_NAME
 
 
 class MessageHandler:

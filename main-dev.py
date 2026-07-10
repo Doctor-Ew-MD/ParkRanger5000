@@ -4,8 +4,8 @@ import traceback
 
 from discord.ext import commands
 
-from ParkRanger5000.categories import EventCategory, CategoryError
-from ParkRanger5000.utils import CHANNEL_ERROR_MSG, STATIC_TOKEN, BOT_ROLE_NAMES
+from categories import EventCategory, CategoryError
+from utils import CHANNEL_ERROR_MSG, STATIC_TOKEN, BOT_ROLE_NAMES
 from channels import ExistingChannel, EventChannel, ChannelFormatError
 from commands import SimpleCommand, CommandWithArgs
 from intents import IntentsHandler

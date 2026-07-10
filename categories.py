@@ -2,7 +2,7 @@ import datetime
 
 import discord
 
-from utils import MONTHS_ABBR
+from utils import MONTHS_ABBR, SilentError
 
 
 class CategoryError(Exception):
@@ -64,7 +64,7 @@ class EventCategory(BaseCategory):
             category_obj = await self.get_category()
             sorted_channels = sorted(category_obj.channels, key=month_day_key)
         except Exception as exc:
-            raise CategoryError(exc)
+            raise SilentError(exc)
 
         payload = [
             {"id": channel.id, "position": i}
@@ -73,7 +73,7 @@ class EventCategory(BaseCategory):
         try:
             await category_obj.guild._state.http.bulk_channel_update(category_obj.guild.id, payload)
         except Exception as exc:
-            print(f"hit exception in sort: {exc}")
+            raise SilentError(exc)
 
     @staticmethod
     def generate_position_name(channel_name: str) -> tuple:
@@ -85,6 +85,6 @@ class EventCategory(BaseCategory):
         try:
             month_int = MONTHS_ABBR.index(name_split[0])
         except Exception as exc:
-            raise CategoryError(exc)
+            raise SilentError(exc)
         else:
             return month_int, name_split[1]

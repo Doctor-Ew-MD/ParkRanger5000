@@ -5,7 +5,7 @@ import traceback
 from discord.ext import commands
 
 from categories import EventCategory, CategoryError
-from utils import CHANNEL_ERROR_MSG, STATIC_TOKEN, BOT_ROLE_NAMES
+from utils import CHANNEL_ERROR_MSG, STATIC_TOKEN, BOT_ROLE_NAMES, SilentError
 from channels import ExistingChannel, EventChannel, ChannelFormatError
 from commands import SimpleCommand, CommandWithArgs
 from intents import IntentsHandler
@@ -144,7 +144,7 @@ async def on_command_error(ctx, error):
 
         if isinstance(error, ChannelFormatError):
             await ctx.send(f"{error}\n\n{CHANNEL_ERROR_MSG}")
-        elif not isinstance(error, CategoryError):
+        elif not isinstance(error, SilentError):
             await ctx.send(error)
     else:
         traceback.print_exception(type(error), error, error.__traceback__)

@@ -2,6 +2,12 @@ import calendar
 import os
 from string import ascii_lowercase
 
+class SilentError(Exception):
+    """
+    Used by on_command_error to prevent an exception from being messaged in the client.
+    """
+    pass
+
 STATIC_TOKEN = os.getenv("STATIC_TOKEN")
 
 BOT_ROLE_NAMES = {"ParkRanger5000", "ParkRanger",}

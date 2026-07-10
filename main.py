@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import traceback
 
-from discord import utils
 from discord.ext import commands
 
 from ParkRanger5000.categories import EventCategory, CategoryError

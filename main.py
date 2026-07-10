@@ -45,7 +45,7 @@ async def create(ctx, *args):
 
     channel_name = ctx.args[1].lower()
     event_channel = EventChannel(ctx, name=channel_name)
-    await event_channel.validate_name()
+    await event_channel.sanitize_input()
 
     event_category = EventCategory(ctx, category_name)
     category_obj = await event_category.get_category()
@@ -84,7 +84,8 @@ async def rename(ctx, *args):
 
     updated_channel_name = ctx.args[3]
     updated_channel = EventChannel(ctx, updated_channel_name.lower())
-    await updated_channel.validate_name()
+
+    await updated_channel.sanitize_input()
 
     channel_obj = await existing_channel.get_channel()
     await channel_obj.edit(name=updated_channel.name)

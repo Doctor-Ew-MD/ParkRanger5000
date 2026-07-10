@@ -99,11 +99,13 @@ class EventChannel(NewChannel):
     def __init__(self, ctx, name):
         super().__init__(ctx, name)
 
-    async def validate_name(self):
+    async def sanitize_input(self):
         """
         A collection of methods for validating an Event channel's name prior to creating it.
         Each validation method should raise an error if something unexpected happens.
         """
+        if len(self.name.split("-")) < 3:
+            raise ChannelFormatError(f"I think that command is missing some data.")
         self.validate_month()
         self.validate_dates()
         self.validate_description()

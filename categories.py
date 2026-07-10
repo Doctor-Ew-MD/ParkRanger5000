@@ -40,10 +40,14 @@ class EventCategory(BaseCategory):
             if channel.name in self.ignore_channels:
                 return 0, 0, 0, 0
 
-            alias = self.generate_position_name(channel.name)
+            month, day = self.generate_position_name(channel.name)
 
-            parts = alias.split("-")
-            month, day = int(parts[0]), int(parts[1])
+            if "-" in day:
+                is_range = 1
+                day = int(day.split("-")[0])
+            else:
+                is_range = 0
+                day = int(day)
 
             today = datetime.date.today()
             channel_date = datetime.date(today.year, month, day)
@@ -54,11 +58,6 @@ class EventCategory(BaseCategory):
             else:
                 year_offset = 0
 
-            try:
-                int(parts[2])
-                is_range = 1
-            except (ValueError, IndexError):
-                is_range = 0
             return year_offset, month, day, is_range
 
         try:
@@ -77,18 +76,15 @@ class EventCategory(BaseCategory):
             print(f"hit exception in sort: {exc}")
 
     @staticmethod
-    def generate_position_name(channel_name: str) -> str:
+    def generate_position_name(channel_name: str) -> tuple:
         """
         Transcribe a channel name by replacing the month alias with its integer.
         Should handle cases where a full month name is used or an abbreviation.
         """
         name_split = channel_name.split("-")
-
         try:
-            month_abbr = name_split[0].lower()
-            month_int = MONTHS_ABBR.index(month_abbr)
+            month_int = MONTHS_ABBR.index(name_split[0])
         except Exception as exc:
             raise CategoryError(exc)
         else:
-            joined_name = "-".join(name_split[1:])
-            return f"{month_int}-{joined_name}"
+            return month_int, name_split[1]

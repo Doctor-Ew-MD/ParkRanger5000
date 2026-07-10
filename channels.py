@@ -16,6 +16,9 @@ class ChannelFormatError(Exception):
     pass
 
 
+BANNED_CHANNELS = ["event-planner"]
+
+
 class BaseChannel:
     def __init__(self, ctx, name):
         self.ctx = ctx
@@ -75,6 +78,8 @@ class ExistingChannel(BaseChannel):
         Verify a channel called <channel_name> exists.
         """
         if channel := await self.get_channel():
+            if channel.name in BANNED_CHANNELS:
+                raise ChannelError(f"Hey! Leave **{channel.name}** alone!")
             if channel.category.name != category_name:
                 raise ChannelError(f"Channel **{self.name}** doesn't exist in the **{category_name}** category.")
         else:
@@ -101,11 +106,11 @@ class EventChannel(NewChannel):
         """
         self.validate_month()
         self.validate_dates()
-        self.validate_name_length()
+        self.validate_description()
 
         # Kinda awkward to do these post-validation, but previous errors are more helpful to the user this way
         self.update_month()
-        self.sanitize_channel_name()
+        # self.sanitize_channel_name()
 
         await self.validate_unique(self.name)
 
@@ -131,19 +136,26 @@ class EventChannel(NewChannel):
         pattern = r"-(\d+)-(\d+)-"  # pattern for a date range
         if match := re.search(pattern, self.name):
             try:
-                int(match.group(1))
-                int(match.group(2))
+                date_one = int(match.group(1))
+                date_two = int(match.group(2))
+                if date_one > date_two or date_one not in range(1,32) or date_two not in range(1,32):
+                    raise ChannelFormatError("There's something up with those dates, are you sure they're correct?")
             except ValueError:
                 raise ChannelFormatError(f"I didn't understand the date range **{match.group(0)[1:-1]}**.")
         else:
             try:
-                int(self.name.split("-")[1])
+                date = int(self.name.split("-")[1])
+                if date not in range(1,32):
+                    raise ChannelFormatError(f"That doesn't look like a valid date.")
             except ValueError:
                 raise ChannelFormatError(f"I didn't understand the date in that command.")
 
-    def validate_name_length(self, name_length: int = 40):
+    def validate_description(self, name_length: int = 40):
         if len(self.name) > name_length:
             raise ChannelError(f"That channel's name is too long! (The maximum length is {name_length} characters).")
+
+        if self.name.split("-")[2] in ("", " ", None):
+            raise ChannelFormatError(f"Something's up with the description in that command.")
 
     def update_month(self):
         """

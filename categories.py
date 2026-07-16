@@ -42,7 +42,7 @@ class EventCategory(BaseCategory):
 
             month, day = self.generate_position_name(channel.name)
 
-            if "-" in day:
+            if "-" in day and len(day.split("-")[1]) < 3:
                 is_range = 1
                 day = int(day.split("-")[0])
             else:

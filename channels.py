@@ -135,7 +135,7 @@ class EventChannel(NewChannel):
         This isn't properly checking a date against a month, rather it's looking
         for a single date or range (e.g., 10 or 10-12).
         """
-        pattern = r"-(\d+)-(\d+)-"  # pattern for a date range
+        pattern = r"-(\d{1,2})-(\d{1,2})-"  # pattern for a date range (two 1-2 digit ints)
         if match := re.search(pattern, self.name):
             try:
                 date_one = int(match.group(1))

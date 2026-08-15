@@ -31,7 +31,7 @@ class EventCategory(BaseCategory):
         super().__init__(guild, name, channels)
         self.ignore_channels = ["event-planner"]
 
-    async def sort(self):
+    async def sort(self, reverse=False):
         """
         Sort the channels in a category based on month and day.
         Channels created for dates that have passed are assumed to be for
@@ -63,10 +63,10 @@ class EventCategory(BaseCategory):
 
         try:
             if self.channels:
-                sorted_channels = sorted(self.channels, key=month_day_key)
+                sorted_channels = sorted(self.channels, key=month_day_key, reverse=reverse)
             else:
                 category_obj = await self.get_category()
-                sorted_channels = sorted(category_obj.channels, key=month_day_key)
+                sorted_channels = sorted(category_obj.channels, key=month_day_key, reverse=reverse)
         except Exception as exc:
             raise SilentError(exc)
 

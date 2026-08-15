@@ -49,7 +49,7 @@ async def update_past_events_task(guild):
     past_event_category_channels = [c for c in updated_channels if c.category_id == past_event_category.id]
 
     past_event_category_obj = EventCategory(guild, PAST_EVENTS_CATEGORY_NAME, past_event_category_channels)
-    await past_event_category_obj.sort()
+    await past_event_category_obj.sort(reverse=True)
 
 
 @task.client.event

@@ -9,6 +9,7 @@ class SilentError(Exception):
     pass
 
 STATIC_TOKEN = os.getenv("STATIC_TOKEN")
+GUILD_ID = os.getenv("GUILD_ID")
 
 BOT_ROLE_NAMES = {"ParkRanger5000", "ParkRanger",}
 INTRODUCTION_CHANNEL_NAME = "introduction"
@@ -28,4 +29,6 @@ MONTHS_ABBR[6] = "june"
 MONTHS_ABBR[7] = "july"
 MONTHS_ABBR[9] = "sept"
 
-EVENTS_CHANNEL_NAME = "event-planner"  # Delete af
+EVENTS_CHANNEL_NAME = "event-planner"
+EVENTS_CATEGORY_NAME = "Events"
+PAST_EVENTS_CATEGORY_NAME = "Past Events"

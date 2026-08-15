@@ -5,7 +5,7 @@ import re
 import discord
 from discord import utils
 
-from utils import CHANNEL_NAME_CHARS, MONTHS_ABBR, VALID_MONTHS
+from utils import CHANNEL_NAME_CHARS, MONTHS_ABBR, VALID_MONTHS, SilentError
 
 
 class ChannelError(Exception):
@@ -55,6 +55,16 @@ class BaseChannel:
             return False
         else:
             return True
+
+    @staticmethod
+    async def move_channel(channel_obj: discord.TextChannel, category_obj: discord.CategoryChannel) -> None:
+        """
+        Move a channel to a new category.
+        """
+        try:
+            await channel_obj.move(beginning=True, category=category_obj)
+        except Exception as exc:
+            raise SilentError(f"hit exception in move_channel: {exc}")
 
 
 class NewChannel(BaseChannel):

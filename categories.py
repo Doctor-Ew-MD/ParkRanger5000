@@ -10,15 +10,16 @@ class CategoryError(Exception):
 
 
 class BaseCategory:
-    def __init__(self, ctx, name):
-        self.ctx = ctx
+    def __init__(self, guild, name, channels=None):
+        self.guild = guild
         self.name = name
+        self.channels = channels
 
     async def get_category(self) -> discord.CategoryChannel:
         """
         Returns the first category found with the given name.
         """
-        if category := discord.utils.get(self.ctx.guild.categories, name=self.name):
+        if category := discord.utils.get(self.guild.categories, name=self.name):
             return category
 
         raise CategoryError(f"Category **{self.name}** doesn't exist!")
@@ -26,8 +27,8 @@ class BaseCategory:
 
 class EventCategory(BaseCategory):
 
-    def __init__(self, ctx, name):
-        super().__init__(ctx, name)
+    def __init__(self, guild, name, channels=None):
+        super().__init__(guild, name, channels)
         self.ignore_channels = ["event-planner"]
 
     async def sort(self):
@@ -61,8 +62,11 @@ class EventCategory(BaseCategory):
             return year_offset, month, day, is_range
 
         try:
-            category_obj = await self.get_category()
-            sorted_channels = sorted(category_obj.channels, key=month_day_key)
+            if self.channels:
+                sorted_channels = sorted(self.channels, key=month_day_key)
+            else:
+                category_obj = await self.get_category()
+                sorted_channels = sorted(category_obj.channels, key=month_day_key)
         except Exception as exc:
             raise SilentError(exc)
 
@@ -71,7 +75,7 @@ class EventCategory(BaseCategory):
             for i, channel in enumerate(sorted_channels)
         ]
         try:
-            await category_obj.guild._state.http.bulk_channel_update(category_obj.guild.id, payload)
+            await self.guild._state.http.bulk_channel_update(self.guild.id, payload)
         except Exception as exc:
             raise SilentError(exc)
 

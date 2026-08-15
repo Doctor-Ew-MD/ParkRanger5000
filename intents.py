@@ -13,4 +13,5 @@ class IntentsHandler:
         intents.messages = True
         intents.message_content = True
         intents.reactions = True
+        intents.guilds = True
         return intents

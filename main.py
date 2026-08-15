@@ -4,8 +4,8 @@ import traceback
 
 from discord.ext import commands
 
-from categories import EventCategory, CategoryError
-from utils import CHANNEL_ERROR_MSG, STATIC_TOKEN, BOT_ROLE_NAMES, SilentError
+from categories import EventCategory
+from utils import CHANNEL_ERROR_MSG, STATIC_TOKEN, BOT_ROLE_NAMES, SilentError, EVENTS_CATEGORY_NAME
 from channels import ExistingChannel, EventChannel, ChannelFormatError
 from commands import SimpleCommand, CommandWithArgs
 from intents import IntentsHandler
@@ -34,7 +34,6 @@ async def create(ctx, *args):
     """
     allowed_roles = ["Verified"]
     allowed_channels = ["event-planner"]
-    category_name = "Events"
 
     cmd = CommandWithArgs(ctx, allowed_roles, allowed_channels)
     await cmd.validate_permissions()
@@ -47,7 +46,7 @@ async def create(ctx, *args):
     event_channel = EventChannel(ctx, name=channel_name)
     await event_channel.sanitize_input()
 
-    event_category = EventCategory(ctx, category_name)
+    event_category = EventCategory(ctx.guild, EVENTS_CATEGORY_NAME)
     category_obj = await event_category.get_category()
 
     await event_channel.create_channel(category_obj)
@@ -91,7 +90,7 @@ async def rename(ctx, *args):
     await channel_obj.edit(name=updated_channel.name)
     await ctx.send(f"As you wish! **{existing_channel_name}** has been renamed to **{channel_obj.jump_url}**!")
 
-    event_category = EventCategory(ctx, category_name)  # Safe to assume Events exists since channel validation passed
+    event_category = EventCategory(ctx.guild, category_name)  # Safe to assume Events exists since channel validation passed
     await event_category.sort()
 
 

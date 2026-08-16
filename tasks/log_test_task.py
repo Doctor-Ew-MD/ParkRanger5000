@@ -15,9 +15,9 @@ async def on_ready():
     global task_failed
     try:
         print(f"Connected as {task.client.user}")
-        print("log_test_task task completed successfully")
+        print("log_test_task completed successfully")
     except Exception as e:
-        print(f"log_test_task task failed: {e}", file=sys.stderr)
+        print(f"log_test_task failed: {e}", file=sys.stderr)
         task_failed = True
     finally:
         await task.client.close()

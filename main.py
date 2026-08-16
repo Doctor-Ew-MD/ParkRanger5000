@@ -5,7 +5,9 @@ import traceback
 from discord.ext import commands
 
 from categories import EventCategory
-from utils import CHANNEL_ERROR_MSG, STATIC_TOKEN, BOT_ROLE_NAMES, SilentError, EVENTS_CATEGORY_NAME
+from reactions import VerificationReaction
+from utils import CHANNEL_ERROR_MSG, STATIC_TOKEN, BOT_ROLE_NAMES, SilentError, EVENTS_CATEGORY_NAME, \
+    INTRODUCTION_CHANNEL_NAME
 from channels import ExistingChannel, EventChannel, ChannelFormatError
 from commands import SimpleCommand, CommandWithArgs
 from intents import IntentsHandler
@@ -116,15 +118,15 @@ async def on_message(message):
     await bot.process_commands(message)
 
 
-# @bot.event
-# async def on_raw_reaction_add(payload):
-#     """
-#     Handles all functionality triggered by reactions.
-#     """
-#     channel = bot.get_channel(payload.channel_id)
-#     if channel.name.lower() == INTRODUCTION_CHANNEL_NAME:
-#         reaction = VerificationReaction(bot, payload, channel)
-#         await reaction.verification_check()
+@bot.event
+async def on_raw_reaction_add(payload):
+    """
+    Handles all functionality triggered by reactions.
+    """
+    channel = bot.get_channel(payload.channel_id)
+    if channel.name.lower() == INTRODUCTION_CHANNEL_NAME:
+        reaction = VerificationReaction(bot, payload, channel)
+        await reaction.verification_check()
 
 
 @bot.event

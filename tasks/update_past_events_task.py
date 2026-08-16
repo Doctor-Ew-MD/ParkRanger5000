@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import sys
+import traceback
+
 sys.path.insert(0, "/home/ec2-user/discord-bots/ParkRanger5000")
 
 from datetime import datetime, date, timedelta
@@ -41,7 +43,7 @@ async def update_past_events_task(guild):
         parsed = datetime.strptime(f"{channel_date[0]}-{channel_date[date_index]}-{current_year}", "%b-%d-%Y")
         event_date = parsed.replace(year=date.today().year).date()
 
-        if event_date < date.today() + timedelta(days=3):
+        if event_date + timedelta(days=3) < date.today():
             await channel.move(beginning=True, category=past_event_category)
 
     # Re-fetch updated Past Events category
@@ -63,6 +65,7 @@ async def on_ready():
         print("update_past_events_task completed successfully")
     except Exception as e:
         print(f"update_past_events_task failed: {e}", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
         task_failed = True
     finally:
         await task.client.close()

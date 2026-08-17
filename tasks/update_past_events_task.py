@@ -43,7 +43,7 @@ async def update_past_events_task(guild):
         parsed = datetime.strptime(f"{channel_date[0]}-{channel_date[date_index]}-{current_year}", "%b-%d-%Y")
         event_date = parsed.replace(year=date.today().year).date()
 
-        if event_date < date.today() + timedelta(days=CHANNEL_SORT_DAYS_THRESHOLD):
+        if event_date + timedelta(days=CHANNEL_SORT_DAYS_THRESHOLD) < date.today():
             await channel.move(beginning=True, category=past_event_category)
 
     # Re-fetch updated Past Events category

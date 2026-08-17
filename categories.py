@@ -2,7 +2,7 @@ import datetime
 
 import discord
 
-from utils import MONTHS_ABBR, SilentError
+from utils import MONTHS_ABBR, SilentError, CHANNEL_SORT_DAYS_THRESHOLD
 
 
 class CategoryError(Exception):
@@ -53,8 +53,8 @@ class EventCategory(BaseCategory):
             today = datetime.date.today()
             channel_date = datetime.date(today.year, month, day)
 
-            # if the date has already passed, assume it's next year
-            if channel_date < today:
+            # if the date has already passed (within the threshold), assume it's next year
+            if channel_date + datetime.timedelta(days=CHANNEL_SORT_DAYS_THRESHOLD) < today:
                 year_offset = 1
             else:
                 year_offset = 0

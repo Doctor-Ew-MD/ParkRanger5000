@@ -9,7 +9,7 @@ from datetime import datetime, date, timedelta
 from ParkRanger5000.tasks.tasks import Task
 from ParkRanger5000.categories import EventCategory
 from ParkRanger5000.utils import PAST_EVENTS_CATEGORY_NAME, GUILD_ID, EVENTS_CATEGORY_NAME, STATIC_TOKEN, \
-    EVENTS_CHANNEL_NAME
+    EVENTS_CHANNEL_NAME, CHANNEL_SORT_DAYS_THRESHOLD
 
 task = Task()
 
@@ -43,7 +43,7 @@ async def update_past_events_task(guild):
         parsed = datetime.strptime(f"{channel_date[0]}-{channel_date[date_index]}-{current_year}", "%b-%d-%Y")
         event_date = parsed.replace(year=date.today().year).date()
 
-        if event_date + timedelta(days=3) < date.today():
+        if event_date < date.today() + timedelta(days=CHANNEL_SORT_DAYS_THRESHOLD):
             await channel.move(beginning=True, category=past_event_category)
 
     # Re-fetch updated Past Events category

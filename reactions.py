@@ -24,17 +24,21 @@ class VerificationReaction(BaseReaction):
         message = await self.channel.fetch_message(self.payload.message_id)
         message_author = guild.get_member(message.author.id)
 
+        print(f"Verification Check, message reaction count: {len(message.reactions)}")
         if len(message.reactions) >= VERIFICATION_REACTION_COUNT:
             unique_users = set()
             for reaction in message.reactions:
                 if reaction.emoji == VERIFICATION_REACTION_BLOCK:
                     return  # we don't verify a member if the ❌ reaction is present
                 async for user in reaction.users():
+                    print(f"Verification Check, checking {user.name} role...")
                     if VERIFIED_ROLE in [r.name for r in user.roles] and not user.bot:
+                        print(f"Verification Check, {user.name} is Verified.")
                         unique_users.add(user.id)
-
+            print(f"Verification Check, {len(unique_users)} unique users: {unique_users}")
             unique_count = len(unique_users)
             if unique_count >= VERIFICATION_REACTION_COUNT:
+                print(f"Verification Check, verifying author {message_author.name}")
                 unverified_role = utils.get(guild.roles, name=UNVERIFIED_ROLE)
                 verified_role = utils.get(guild.roles, name=VERIFIED_ROLE)
                 await message_author.remove_roles(unverified_role)  # Works even if the author doesn't have this role

@@ -29,7 +29,7 @@ class EventCategory(BaseCategory):
 
     def __init__(self, guild, name, channels=None):
         super().__init__(guild, name, channels)
-        self.ignore_channels = ["event-planner"]
+        self.ignore_channels = ["event-planner", "aug-27-2030-lube-wrestling",]
 
     async def sort(self, reverse=False):
         """

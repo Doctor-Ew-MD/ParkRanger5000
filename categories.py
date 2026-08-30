@@ -29,7 +29,8 @@ class EventCategory(BaseCategory):
 
     def __init__(self, guild, name, channels=None):
         super().__init__(guild, name, channels)
-        self.ignore_channels = ["event-planner", "aug-27-2030-lube-wrestling",]
+        self.top_channels = ["event-planner"]
+        self.bottom_channels = ["aug-27-2030-lube-wrestling"]
 
     async def sort(self, reverse=False):
         """
@@ -38,8 +39,11 @@ class EventCategory(BaseCategory):
         the next year, and are sorted below "current year" events.
         """
         def month_day_key(channel):
-            if channel.name in self.ignore_channels:
-                return 0, 0, 0, 0
+            if channel.name in self.top_channels:
+                return -1, 0, 0, 0
+
+            elif channel.name in self.bottom_channels:
+                return 2, 0, 0, 0
 
             month, day = self.generate_position_name(channel.name)
 

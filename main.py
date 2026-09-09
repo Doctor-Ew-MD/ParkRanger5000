@@ -7,7 +7,7 @@ from discord.ext import commands
 from categories import EventCategory
 from reactions import VerificationReaction
 from utils import CHANNEL_ERROR_MSG, STATIC_TOKEN, BOT_ROLE_NAMES, SilentError, EVENTS_CATEGORY_NAME, \
-    INTRODUCTION_CHANNEL_NAME
+    INTRODUCTION_CHANNEL_NAME, QUOTES
 from channels import ExistingChannel, EventChannel, ChannelFormatError
 from commands import SimpleCommand, CommandWithArgs
 from intents import IntentsHandler
@@ -106,8 +106,15 @@ async def on_message(message):
     """
     Handle all message-related actions from/to the bot.
     """
+    def normalize_quotes(text: str) -> str:
+        for char in QUOTES:
+            text = text.replace(char, "")
+        return text
+
     if message.author.id == bot.user.id:
         return  # Stop the bot from talking to itself
+
+    message.content = normalize_quotes(message.content)
 
     bot_mentioned = bot.user in message.mentions
     role_mentioned = any(role.name in BOT_ROLE_NAMES for role in message.role_mentions)

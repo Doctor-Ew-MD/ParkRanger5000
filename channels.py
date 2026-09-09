@@ -5,7 +5,7 @@ import re
 import discord
 from discord import utils
 
-from utils import CHANNEL_NAME_CHARS, MONTHS_ABBR, VALID_MONTHS, SilentError
+from utils import MONTHS_ABBR, VALID_MONTHS, SilentError
 
 
 class ChannelError(Exception):
@@ -34,7 +34,12 @@ class BaseChannel:
         """
         Remove any characters which are not allowed in a channel name, and update self.name.
         """
-        self.name = "".join(c for c in self.name if c in CHANNEL_NAME_CHARS)
+        name = self.name.lower()
+        name = re.sub(r"\s+", "-", name)  # spaces -> hyphens
+        name = re.sub(r"[^a-z0-9\-_]", "", name)  # strip anything not alphanumeric/hyphen/underscore
+        name = re.sub(r"-+", "-", name)  # collapse multiple hyphens
+        name = name.strip("-")
+        self.name = name
 
     @staticmethod
     async def overwrite_channel_positions(category: discord.CategoryChannel) -> bool:
@@ -116,13 +121,13 @@ class EventChannel(NewChannel):
         """
         if len(self.name.split("-")) < 3:
             raise ChannelFormatError(f"I think that command is missing some data.")
+        self.sanitize_channel_name()
         self.validate_month()
         self.validate_dates()
         self.validate_description()
 
         # Kinda awkward to do these post-validation, but previous errors are more helpful to the user this way
         self.update_month()
-        # self.sanitize_channel_name()
 
         await self.validate_unique(self.name)
 
@@ -166,8 +171,11 @@ class EventChannel(NewChannel):
         if len(self.name) > name_length:
             raise ChannelError(f"That channel's name is too long! (The maximum length is {name_length} characters).")
 
-        if self.name.split("-")[2] in ("", " ", None):
-            raise ChannelFormatError(f"Something's up with the description in that command.")
+        try:
+            if not self.name.split("-")[2].strip():
+                raise ChannelFormatError("Something's up with the description. Can you try it a different way?")
+        except IndexError:
+            raise ChannelFormatError("Something's up with the description. Can you try it a different way?")
 
     def update_month(self):
         """

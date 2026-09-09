@@ -18,7 +18,15 @@ CHANNEL_ERROR_MSG = (
     "Remember to include a month, day (or a range, like: 25-26), and description, like this:"
     "\n**!create dec 31 nye dance party**"
 )
-CHANNEL_NAME_CHARS = ascii_lowercase + " " +  "-" + "".join(str(i) for i in range(0, 10))
+
+QUOTES = [
+    "\u2018",
+    "\u2019",
+    "\u201c",
+    "\u201d",
+    "'",
+    '"',
+]
 
 VALID_MONTHS = [month.lower() for month in calendar.month_name]
 VALID_MONTHS += [month.lower() for month in calendar.month_abbr]

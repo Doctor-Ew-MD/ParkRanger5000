@@ -5,7 +5,7 @@ import re
 import discord
 from discord import utils
 
-from utils import MONTHS_ABBR, VALID_MONTHS, SilentError
+from utils import MONTHS_ABBR, VALID_MONTHS, SilentError, EMOJI_RANGES
 
 
 class ChannelError(Exception):
@@ -34,9 +34,11 @@ class BaseChannel:
         """
         Remove any characters which are not allowed in a channel name, and update self.name.
         """
+        EMOJIS = "".join(EMOJI_RANGES)
+
         name = self.name.lower()
         name = re.sub(r"\s+", "-", name)  # spaces -> hyphens
-        name = re.sub(r"[^a-z0-9\-_]", "", name)  # strip anything not alphanumeric/hyphen/underscore
+        name = re.sub(rf"[^a-z0-9\-_{EMOJIS}]", "", name)  # strip anything not alphanumeric/hyphen/underscore, keep emojis
         name = re.sub(r"-+", "-", name)  # collapse multiple hyphens
         name = name.strip("-")
         self.name = name

@@ -1,5 +1,6 @@
 import calendar
 import os
+import re
 from string import ascii_lowercase
 
 class SilentError(Exception):
@@ -26,6 +27,13 @@ QUOTES = [
     "\u201d",
     "'",
     '"',
+]
+EMOJI_RANGES = [
+    "\U0001F300-\U0001FAFF",
+    "\U00002600-\U000027BF",
+    "\U0001F1E6-\U0001F1FF",
+    "\u200d",
+    "\ufe0f",
 ]
 
 VALID_MONTHS = [month.lower() for month in calendar.month_name]

@@ -5,7 +5,7 @@ import re
 import discord
 from discord import utils
 
-from utils import MONTHS_ABBR, VALID_MONTHS, SilentError, EMOJI_RANGES
+from utils import MONTHS_ABBR, VALID_MONTHS, SilentError, EMOJI_RANGES, MAX_CHANNEL_NAME_LENGTH
 
 
 class ChannelError(Exception):
@@ -169,7 +169,7 @@ class EventChannel(NewChannel):
             except ValueError:
                 raise ChannelFormatError(f"I didn't understand the date in that command.")
 
-    def validate_description(self, name_length: int = 40):
+    def validate_description(self, name_length: int = MAX_CHANNEL_NAME_LENGTH):
         if len(self.name) > name_length:
             raise ChannelError(f"That channel's name is too long! (The maximum length is {name_length} characters).")
 

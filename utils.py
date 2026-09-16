@@ -1,7 +1,5 @@
 import calendar
 import os
-import re
-from string import ascii_lowercase
 
 class SilentError(Exception):
     """

@@ -30,6 +30,7 @@ async def update_past_events_task(guild):
         if channel.name == EVENTS_CHANNEL_NAME or "wrestling" in channel.name:
             continue  # ignore channel, it should not be moved
         channel_date = channel.name.split("-")[:3]
+        channel_date[0] = channel_date[0][0:3]  # avoid errors with %b formatting for June, July, Sept.
 
         try:
             # Check if this is a ranged date so that we use the latest date possible in the event name

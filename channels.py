@@ -122,7 +122,7 @@ class EventChannel(NewChannel):
         Each validation method should raise an error if something unexpected happens.
         """
         if len(self.name.split("-")) < 3:
-            raise ChannelFormatError(f"I think that command is missing some data.")
+            raise ChannelFormatError("I think that command is missing some data.")
         self.sanitize_channel_name()
         self.validate_month()
         self.validate_dates()
@@ -160,14 +160,14 @@ class EventChannel(NewChannel):
                 if date_one > date_two or date_one not in range(1,32) or date_two not in range(1,32):
                     raise ChannelFormatError("There's something up with those dates, are you sure they're correct?")
             except ValueError:
-                raise ChannelFormatError(f"I didn't understand the date range **{match.group(0)[1:-1]}**.")
+                raise ChannelFormatError(f"I didn't understand the date range **{match.group(0)[1:-1]}**; try again. (Make a new command, editing won't work.)")
         else:
             try:
                 date = int(self.name.split("-")[1])
                 if date not in range(1,32):
-                    raise ChannelFormatError(f"That doesn't look like a valid date.")
+                    raise ChannelFormatError("That doesn't look like a valid date.")
             except ValueError:
-                raise ChannelFormatError(f"I didn't understand the date in that command.")
+                raise ChannelFormatError("I didn't understand the date in that command; try again. (Make a new command, editing won't work.)")
 
     def validate_description(self, name_length: int = MAX_CHANNEL_NAME_LENGTH):
         if len(self.name) > name_length:

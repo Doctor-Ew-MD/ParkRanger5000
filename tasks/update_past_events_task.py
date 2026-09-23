@@ -34,11 +34,12 @@ async def update_past_events_task(guild):
 
         try:
             # Check if this is a ranged date so that we use the latest date possible in the event name
-            int(channel_date[2])
+            if int(channel_date[2]) and len(channel_date[2]) <= 2:  # accounts for years in index 2
+                date_index = 2
+            else:
+                date_index = 1
         except ValueError:
             date_index = 1
-        else:
-            date_index = 2
 
         current_year = date.today().year
         parsed = datetime.strptime(f"{channel_date[0]}-{channel_date[date_index]}-{current_year}", "%b-%d-%Y")

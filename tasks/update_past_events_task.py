@@ -27,7 +27,7 @@ async def update_past_events_task(guild):
     past_event_category = [c for c in all_channels if c.name == PAST_EVENTS_CATEGORY_NAME][0]
 
     for channel in event_channels:
-        if channel.name == EVENTS_CHANNEL_NAME or "wrestling" in channel.name:
+        if channel.name == EVENTS_CHANNEL_NAME:
             continue  # ignore channel, it should not be moved
         channel_date = channel.name.split("-")[:3]
         channel_date[0] = channel_date[0][0:3]  # avoid errors with %b formatting for June, July, Sept.

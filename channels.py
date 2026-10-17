@@ -37,6 +37,7 @@ class BaseChannel:
         EMOJIS = "".join(EMOJI_RANGES)
 
         name = self.name.lower()
+        name = re.sub(r"(\d+)(st|nd|rd|th)\b", r"\1", name)
         name = re.sub(r"\s+", "-", name)  # spaces -> hyphens
         name = re.sub(rf"[^a-z0-9\-_{EMOJIS}]", "", name)  # strip anything not alphanumeric/hyphen/underscore, keep emojis
         name = re.sub(r"-+", "-", name)  # collapse multiple hyphens

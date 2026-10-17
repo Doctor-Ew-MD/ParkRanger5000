@@ -24,6 +24,10 @@ class VerificationReaction(BaseReaction):
         message = await self.channel.fetch_message(self.payload.message_id)
         message_author = guild.get_member(message.author.id)
 
+        # Skip verification_check for any users already verified
+        if VERIFIED_ROLE in [r.name for r in message_author.roles]:
+            return
+
         total_reaction_count = sum(reaction.count for reaction in message.reactions)
         print(f"Verification Check, total reaction count: {total_reaction_count}")
 

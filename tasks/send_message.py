@@ -6,7 +6,8 @@ Usage:
     python3 send_message.py <channel_id> "<message>"
 
 Example:
-    venv/bin/python3.13 send_message.py 123456789012345678 "Hello from EC2!"
+    export STATIC_TOKEN=<token>
+    venv/bin/python3.13 tasks/send_message.py 123456789012345678 "Hello from EC2!"
 """
 import os
 import sys

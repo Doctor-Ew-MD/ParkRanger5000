@@ -2,14 +2,13 @@
 import sys
 import traceback
 
-from channels import safe_fetch_channels
-
 sys.path.insert(0, "/home/ec2-user/discord-bots/ParkRanger5000")
 
 from datetime import datetime, date, timedelta
 
 from ParkRanger5000.tasks.tasks import Task
 from ParkRanger5000.categories import EventCategory
+from ParkRanger5000.channels import safe_fetch_channels
 from ParkRanger5000.utils import PAST_EVENTS_CATEGORY_NAME, GUILD_ID, EVENTS_CATEGORY_NAME, STATIC_TOKEN, \
     EVENTS_CHANNEL_NAME, CHANNEL_SORT_DAYS_THRESHOLD
 

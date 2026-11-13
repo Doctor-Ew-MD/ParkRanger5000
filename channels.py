@@ -4,8 +4,20 @@ import re
 
 import discord
 from discord import utils
+from discord.channel import _guild_channel_factory
 
 from utils import MONTHS_ABBR, VALID_MONTHS, SilentError, EMOJI_RANGES, MAX_CHANNEL_NAME_LENGTH
+
+
+async def safe_fetch_channels(guild):
+    data = await guild._state.http.get_all_guild_channels(guild.id)
+    channels = []
+    for d in data:
+        factory, _ = _guild_channel_factory(d["type"])
+        if factory is None:
+            continue  # unknown/experimental channel type
+        channels.append(factory(guild=guild, state=guild._state, data=d))
+    return channels
 
 
 class ChannelError(Exception):

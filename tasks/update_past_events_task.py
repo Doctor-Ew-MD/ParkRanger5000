@@ -2,6 +2,8 @@
 import sys
 import traceback
 
+from channels import safe_fetch_channels
+
 sys.path.insert(0, "/home/ec2-user/discord-bots/ParkRanger5000")
 
 from datetime import datetime, date, timedelta
@@ -21,7 +23,7 @@ async def update_past_events_task(guild):
     Scan the Event Category for channels whose date has past, and move them
     into the Past Events category, then sort.
     """
-    all_channels = await guild.fetch_channels()
+    all_channels = await safe_fetch_channels(guild)
     event_category = [c for c in all_channels if c.name == EVENTS_CATEGORY_NAME][0]
     event_channels = [c for c in all_channels if c.category_id == event_category.id]
     past_event_category = [c for c in all_channels if c.name == PAST_EVENTS_CATEGORY_NAME][0]
@@ -49,7 +51,7 @@ async def update_past_events_task(guild):
             await channel.move(beginning=True, category=past_event_category)
 
     # Re-fetch updated Past Events category
-    updated_channels = await guild.fetch_channels()
+    updated_channels = await safe_fetch_channels(guild)
     past_event_category_channels = [c for c in updated_channels if c.category_id == past_event_category.id]
 
     past_event_category_obj = EventCategory(guild, PAST_EVENTS_CATEGORY_NAME, past_event_category_channels)
